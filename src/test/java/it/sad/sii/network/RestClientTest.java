@@ -1,9 +1,15 @@
 package it.sad.sii.network;
 
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.net.URISyntaxException;
+import java.security.KeyStore;
 import java.util.Hashtable;
 
 import static org.junit.Assert.*;
@@ -18,27 +24,12 @@ public class RestClientTest extends RestTest {
     @BeforeClass
     static public void setUpOnce() {
         try {
-            //rest_rfi = new RestClient(RFI_URL_BASE, RFI_USERNAME, RFI_PASSWORD, 5000, httpProxy, proxyPort);
-            rest_ts = new RestClient(TS_URL_BASE, TS_USERNAME, TS_PASSWORD, 5000, null, 0);
             rest_pu = new RestClient(PU_URL_BASE, PU_USERNAME, PU_PASSWORD, 5000, httpProxy, proxyPort);
         } catch (URISyntaxException e) {
             LOG.error(e.getMessage());
         }
     }
 
-    @Test
-    public void testSimpleGet() throws Exception {
-        rest_pu.setTimeouts(5000, 5000, 5000);
-        rest_pu.disableRetryCircuitBreaker();
-
-        assertEquals(rest_pu.getRetryCircuitBreakerState(), RestClient.RetryCircuitBreakerState.OFF);
-
-        String jsonResponse = rest_ts.get(TS_URL_BASE + "line-times/1099/runs");
-
-        assertTrue("No runs returned by server", jsonResponse.length() != 0);
-        assertEquals(rest_pu.getRetryCircuitBreakerState(), RestClient.RetryCircuitBreakerState.OFF);
-    }
-    
     @Test
     public void testGetEncoding() throws Exception {
         rest_pu.setTimeouts(5000, 5000, 5000);
@@ -243,26 +234,6 @@ public class RestClientTest extends RestTest {
         }
 
         fail("Request should throw UnsupportedOperationException");
-    }
-
-    @Test
-    public void testRetryAuthentication() throws Exception {
-        // Should not make multiple retries when authentication isn't working.
-        RestClient client = new RestClient(TS_URL_BASE, TS_USERNAME, TS_PASSWORD + "abc", 5000, null, 0);
-        client.enableRetryCircuitBreaker(3, 1000, 3000);
-
-        assertEquals(client.getRetryCircuitBreakerState(), RestClient.RetryCircuitBreakerState.CLOSED);
-
-        try {
-            client.get(TS_URL_BASE + "line-times/1099/runs");
-        } catch (UnsupportedOperationException e) {
-            if (e.getMessage().equals("ERROR 401 Unauthorized: Wrong password")) {
-                assertEquals(client.getRetryCircuitBreakerState(), RestClient.RetryCircuitBreakerState.CLOSED);
-                return;
-            }
-        }
-
-        fail("Request should have failed with 'ERROR 401 Unauthorized: Wrong password'");
     }
 }
 

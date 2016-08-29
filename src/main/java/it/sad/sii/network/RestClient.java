@@ -3,11 +3,9 @@ package it.sad.sii.network;
 import com.github.rholder.retry.*;
 import com.google.common.base.Predicates;
 import okhttp3.*;
-import org.apache.log4j.Logger;
+import okhttp3.internal.tls.OkHostnameVerifier;
 
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.TrustManagerFactory;
-import javax.net.ssl.X509TrustManager;
+import javax.net.ssl.*;
 import java.io.IOException;
 import java.net.*;
 import java.security.KeyStore;
@@ -20,14 +18,19 @@ import java.util.concurrent.TimeUnit;
 import static it.sad.sii.network.RestRequest.HTTPVerb.GET;
 import static it.sad.sii.network.RestRequest.HTTPVerb.POST;
 
+//import sun.security.x509.X500Name;
+//import sun.security.x509.X509CertImpl;
+
+//import org.apache.log4j.Logger;
+
 /**
  * Class that handles HTTP(S) GET and POST requests.
- * <p>
+ * <p/>
  * It has two modes: simple and smart.
- * <p>
+ * <p/>
  * 1) Simple Mode: Make each request exactly once (retryCircuitBreakerState = OFF).
  * Is the default mode and can be set with {@link #disableRetryCircuitBreaker()}
- * <p>
+ * <p/>
  * 2) Smart Mode: Retry each request 'retries' times with an exponential backoff up until 'maxRetryTime' ms is reached
  * (retryCircuitBreakerState = CLOSED).
  * If the request does not succeed it blocks all following requests for 'maxCircuitBreakerOpenTime' ms
@@ -35,12 +38,12 @@ import static it.sad.sii.network.RestRequest.HTTPVerb.POST;
  * After that the next request will be issued in the Simple Mode.
  * Only if that succeeds we re-enter the Smart Mode (retryCircuitBreakerState = CLOSED).
  * This mode can be set with {@link #enableRetryCircuitBreaker(int, int, int)}
- * <p>
+ * <p/>
  * Furthermore, we can set the read, write and connect timeouts with {@link #setTimeouts(int, int, int)}
  */
 public class RestClient {
 
-    private static final Logger LOG = Logger.getLogger(RestClient.class);
+    //    private static final Logger LOG = Logger.getLogger(RestClient.class);
 
     protected final URI serverUri;
     protected final int timeout;
@@ -178,7 +181,7 @@ public class RestClient {
     }
 
     private void createClient() {
-        OkHttpClient.Builder okHttpClientBuilder =
+        final OkHttpClient.Builder okHttpClientBuilder =
                 new OkHttpClient.Builder().connectTimeout(timeout, TimeUnit.MILLISECONDS)
                                           .readTimeout(timeout, TimeUnit.MILLISECONDS)
                                           .writeTimeout(timeout, TimeUnit.MILLISECONDS)
@@ -198,10 +201,10 @@ public class RestClient {
                                                      (X509TrustManager)trustManagerFactory.getTrustManagers()[0]);
             } else if (serverUri.getScheme().equalsIgnoreCase("https")) {
                 // No truststore, but we want https anyway? Better be only for test!
-                LOG.warn("HTTPS required, but no truststore provided. Add one before production!!!");
+                //                LOG.warn("HTTPS required, but no truststore provided. Add one before production!!!");
             }
         } catch (Exception e) {
-            LOG.error("Init TrustStore error", e);
+            //            LOG.error("Init TrustStore error", e);
         }
 
         // Basic authentication
@@ -225,6 +228,24 @@ public class RestClient {
 
         // Disable redirect
         okHttpClientBuilder.followRedirects(false);
+
+        // the external hostname is not the one presented by the certificate, the hostname validation fails
+        // -> we add an exception if the hostname is services and the certificate issued for v-theoden
+        okHttpClientBuilder.hostnameVerifier(new HostnameVerifier() {
+            @Override
+            public boolean verify(String s, SSLSession sslSession) {
+                try {
+                    String peer = sslSession.getPeerHost();
+                    // String certPeer = ((X500Name)((X509CertImpl)sslSession.getPeerCertificates()[0])
+                    //         .getSubjectDN()).getCommonName();
+                    if ("services.sad.it".equals(peer)
+                        // && "v-theoden.sad.it".equals(certPeer)
+                            )
+                        return true;
+                } catch (Exception e) {}
+                return OkHostnameVerifier.INSTANCE.verify(s, sslSession);
+            }
+        });
 
         okHttpClient = okHttpClientBuilder.build();
     }
@@ -322,10 +343,10 @@ public class RestClient {
         } catch (RetryException e) {
             response = new RestResponse(e);
             openCircuitBreaker();
-            LOG.error("retryer sendCall RetryException: " + e);
+            //            LOG.error("retryer sendCall RetryException: " + e);
         } catch (ExecutionException e) {
             response = new RestResponse(e);
-            LOG.error("retryer sendCall ExecutionException: " + e);
+            //            LOG.error("retryer sendCall ExecutionException: " + e);
         }
 
         return response;
@@ -356,8 +377,8 @@ public class RestClient {
 
                 if (elapsedTime < maxCircuitBreakerOpenTime) {
                     // we still do not allow any requests -> throw exception
-                    LOG.error("Requests are not permitted for another " + elapsedTime +
-                              "ms because the last request failed");
+                    //                    LOG.error("Requests are not permitted for another " + elapsedTime +
+                    //                              "ms because the last request failed");
                     response = new RestResponse(new CircuitBreakerException(
                             "Requests are not permitted for another " + elapsedTime +
                             "ms because the last request failed"));

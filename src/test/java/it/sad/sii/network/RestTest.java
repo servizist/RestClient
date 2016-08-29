@@ -12,17 +12,10 @@ import static org.junit.Assert.assertEquals;
 public class RestTest {
 
     protected static final Logger LOG = Logger.getLogger(RestTest.class);
-    static it.sad.sii.network.RestClient rest_rfi;
-    static it.sad.sii.network.RestClient rest_ts;
     static it.sad.sii.network.RestClient rest_pu;
 
     protected static final int proxyPort = 3128;
     protected static final String httpProxy = "proxy.sad.it";
-
-    // Transit server
-    protected static final String TS_URL_BASE = "https://mocobus.sii.bz.it/transit-service/";
-    protected static final String TS_USERNAME = "";
-    protected static final String TS_PASSWORD = "";
 
     // Public online test server
     protected static final String PU_URL_BASE = "https://httpbin.org/";
