@@ -207,25 +207,6 @@ public class RestClient {
             //            LOG.error("Init TrustStore error", e);
         }
 
-        // Basic authentication
-        if (username != null && password != null) {
-            okHttpClientBuilder.authenticator(new okhttp3.Authenticator() {
-                @Override
-                public Request authenticate(Route route, Response response) throws IOException {
-                    String credential = Credentials.basic(username, password);
-
-                    if (credential.equals(response.request().header("Authorization"))) {
-                        // If we already failed with these credentials, don't retry.
-                        return null;
-                    }
-
-                    return response.request().newBuilder()
-                            .header("Authorization", credential)
-                            .build();
-                }
-            });
-        }
-
         // Disable redirect
         okHttpClientBuilder.followRedirects(false);
 
@@ -273,11 +254,18 @@ public class RestClient {
         String requestUrl = generateUrl(restRequest);
         Request.Builder requestBuilder = new Request.Builder();
         requestBuilder.header("User-Agent", "OkHttp RestClient").addHeader("Accept", "application/json");
+
+        // Add basic auth directly to the relevant headers
+        if (username != null && password != null) {
+            String credentials = Credentials.basic(username, password);
+            requestBuilder.header("Authorization", credentials);
+        }
+
         requestBuilder.url(requestUrl);
 
         // Build request to send to our REST service
         // Creation of PUT or POST body
-        RequestBody body = null;
+        RequestBody body;
         if (restRequest.getContent() != null) {
             body = RequestBody.create(JSON, restRequest.getContent());
         } else {
@@ -329,12 +317,12 @@ public class RestClient {
 
         Retryer<RestResponse> retryer =
                 RetryerBuilder.<RestResponse>newBuilder()
-                        .retryIfResult(Predicates.<RestResponse>isNull())
-                        .retryIfExceptionOfType(SocketTimeoutException.class)
+                              .retryIfResult(Predicates.<RestResponse>isNull())
+                              .retryIfExceptionOfType(SocketTimeoutException.class)
                         .retryIfExceptionOfType(IOException.class)
-                        .retryIfRuntimeException()
-                        .withWaitStrategy(
-                                WaitStrategies.exponentialWait(100, maxRetryTime, TimeUnit.MILLISECONDS))
+                              .retryIfRuntimeException()
+                              .withWaitStrategy(
+                                      WaitStrategies.exponentialWait(100, maxRetryTime, TimeUnit.MILLISECONDS))
                         .withStopStrategy(StopStrategies.stopAfterAttempt(retries))
                         .build();
 

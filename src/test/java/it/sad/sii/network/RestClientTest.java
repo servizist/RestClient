@@ -1,15 +1,9 @@
 package it.sad.sii.network;
 
-import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
 import java.net.URISyntaxException;
-import java.security.KeyStore;
 import java.util.Hashtable;
 
 import static org.junit.Assert.*;
@@ -46,9 +40,25 @@ public class RestClientTest extends RestTest {
         assertJsonEquals("GET encoding response different from expected response.", jsonResponse,
                          "{\"args\":{\"limit\":\"?2\",\"placeId\":\"&685\"},\"headers\": " +
                          "{\"Accept\":\"application/json\"," +
-                         "\"Accept-Encoding\":\"gzip\",\"Host\":\"httpbin.org\",\"User-Agent\":\"OkHttp " +
+                         "\"Accept-Encoding\":\"gzip\"," +
+                         "\"Authorization\":\"Basic cGluY286MTIzNDU2Nzg5MA==\"," +
+                         "\"Host\":\"httpbin.org\",\"User-Agent\":\"OkHttp " +
                          "RestClient\"}," +
                          "\"origin\":\"2.113.90.244\",\"url\":\"https://httpbin.org/get?limit=%3F2&placeId=%26685\"}");
+        assertEquals(rest_pu.getRetryCircuitBreakerState(), RestClient.RetryCircuitBreakerState.OFF);
+    }
+
+    @Test
+    public void testBasicAuth() throws Exception {
+        rest_pu.setTimeouts(5000, 5000, 5000);
+        rest_pu.disableRetryCircuitBreaker();
+
+        assertEquals(rest_pu.getRetryCircuitBreakerState(), RestClient.RetryCircuitBreakerState.OFF);
+
+        String jsonResponse = rest_pu.get(PU_URL_BASE + String.format("basic-auth/%s/%s", PU_USERNAME, PU_PASSWORD));
+
+        assertJsonEquals("GET encoding response different from expected response.", jsonResponse,
+                         "{ \"authenticated\": true, \"user\": \"" + PU_USERNAME + "\"}");
         assertEquals(rest_pu.getRetryCircuitBreakerState(), RestClient.RetryCircuitBreakerState.OFF);
     }
 
@@ -65,7 +75,9 @@ public class RestClientTest extends RestTest {
 
         assertJsonEquals("GET with encoded params response different from expected response.", jsonResponse,
                          "{\"args\": {\"id\": \"123\", \"name\": \"pippo\"}, \"headers\": {" +
-                         "\"Accept\": \"application/json\", \"Accept-Encoding\": \"gzip\", \"Host\": \"httpbin.org\"," +
+                         "\"Accept\": \"application/json\", \"Accept-Encoding\": \"gzip\", " +
+                         "\"Authorization\":\"Basic cGluY286MTIzNDU2Nzg5MA==\", " +
+                         "\"Host\": \"httpbin.org\"," +
                          "\"User-Agent\": \"OkHttp RestClient\" }, \"origin\": \"2.113.90.244\"," +
                          "\"url\": \"https://httpbin.org/get?id=123&name=pippo\" }");
         assertEquals(rest_pu.getRetryCircuitBreakerState(), RestClient.RetryCircuitBreakerState.OFF);
@@ -83,7 +95,9 @@ public class RestClientTest extends RestTest {
         assertTrue("No gzipped data returned by server", jsonResponse.length() != 0);
         assertJsonEquals("GET Gzipped response different from expected response.", jsonResponse,
                          "{\"gzipped\": true, \"headers\": {\"Accept\": \"application/json\"," +
-                         "\"Accept-Encoding\": \"gzip\", \"Host\": \"httpbin.org\", " +
+                         "\"Accept-Encoding\": \"gzip\", " +
+                         "\"Authorization\":\"Basic cGluY286MTIzNDU2Nzg5MA==\", " +
+                         "\"Host\": \"httpbin.org\", " +
                          "\"User-Agent\": \"OkHttp RestClient\"}, \"method\": \"GET\"," +
                          " \"origin\": \"2.113.90.244\"}");
         assertEquals(rest_pu.getRetryCircuitBreakerState(), RestClient.RetryCircuitBreakerState.OFF);
@@ -119,6 +133,7 @@ public class RestClientTest extends RestTest {
                          "{\"args\": {}, \"data\": \"ABCDEDFGHIJ\", \"files\": {}, \"form\": {}, \"headers\": {" +
                          "\"Accept\": \"application/json\", \"Accept-Encoding\": \"gzip\", " +
                          "\"Content-Length\": \"11\", \"Content-Type\": \"application/json; charset=utf-8\"," +
+                         "\"Authorization\":\"Basic cGluY286MTIzNDU2Nzg5MA==\"," +
                          "\"Host\": \"httpbin.org\", \"User-Agent\": \"OkHttp RestClient\"  },  \"json\": null," +
                          "\"origin\": \"2.113.90.244\", \"url\": \"https://httpbin.org/post\"}");
         assertEquals(rest_pu.getRetryCircuitBreakerState(), RestClient.RetryCircuitBreakerState.OFF);
@@ -209,7 +224,9 @@ public class RestClientTest extends RestTest {
             assertEquals(rest_pu.getRetryCircuitBreakerState(), RestClient.RetryCircuitBreakerState.CLOSED);
             assertJsonEquals("GET response different from expected response.", response,
                              "{\"args\":{},\"headers\":{\"Accept\":\"application/json\",\"Accept-Encoding\":" +
-                             "\"gzip\",\"Host\":\"httpbin.org\",\"User-Agent\":\"OkHttp RestClient\"}," +
+                             "\"gzip\"," +
+                             "\"Authorization\":\"Basic cGluY286MTIzNDU2Nzg5MA==\"," +
+                             "\"Host\":\"httpbin.org\",\"User-Agent\":\"OkHttp RestClient\"}," +
                              "\"origin\":\"2.113.90.244\",\"url\":\"https://httpbin.org/get\"}");
             LOG.debug(response);
             return;
