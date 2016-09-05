@@ -115,10 +115,10 @@ public class RestClient {
      */
     public void setTimeouts(int readTimeout, int writeTimeout, int connectTimeout) {
         okHttpClient = okHttpClient.newBuilder()
-                                   .readTimeout(readTimeout, TimeUnit.MILLISECONDS)
-                                   .writeTimeout(writeTimeout, TimeUnit.MILLISECONDS)
-                                   .connectTimeout(connectTimeout, TimeUnit.MILLISECONDS)
-                                   .build();
+                .readTimeout(readTimeout, TimeUnit.MILLISECONDS)
+                .writeTimeout(writeTimeout, TimeUnit.MILLISECONDS)
+                .connectTimeout(connectTimeout, TimeUnit.MILLISECONDS)
+                .build();
     }
 
     /**
@@ -183,9 +183,9 @@ public class RestClient {
     private void createClient() {
         final OkHttpClient.Builder okHttpClientBuilder =
                 new OkHttpClient.Builder().connectTimeout(timeout, TimeUnit.MILLISECONDS)
-                                          .readTimeout(timeout, TimeUnit.MILLISECONDS)
-                                          .writeTimeout(timeout, TimeUnit.MILLISECONDS)
-                                          .proxy(proxy);
+                        .readTimeout(timeout, TimeUnit.MILLISECONDS)
+                        .writeTimeout(timeout, TimeUnit.MILLISECONDS)
+                        .proxy(proxy);
 
         // init truststore we need for servers without a valid certificate
         try {
@@ -198,7 +198,7 @@ public class RestClient {
 
                 sslContext.init(null, trustManagerFactory.getTrustManagers(), new SecureRandom());
                 okHttpClientBuilder.sslSocketFactory(sslContext.getSocketFactory(),
-                                                     (X509TrustManager)trustManagerFactory.getTrustManagers()[0]);
+                        (X509TrustManager) trustManagerFactory.getTrustManagers()[0]);
             } else if (serverUri.getScheme().equalsIgnoreCase("https")) {
                 // No truststore, but we want https anyway? Better be only for test!
                 //                LOG.warn("HTTPS required, but no truststore provided. Add one before production!!!");
@@ -220,8 +220,8 @@ public class RestClient {
                     }
 
                     return response.request().newBuilder()
-                                   .header("Authorization", credential)
-                                   .build();
+                            .header("Authorization", credential)
+                            .build();
                 }
             });
         }
@@ -242,7 +242,8 @@ public class RestClient {
                         // && "v-theoden.sad.it".equals(certPeer)
                             )
                         return true;
-                } catch (Exception e) {}
+                } catch (Exception e) {
+                }
                 return OkHostnameVerifier.INSTANCE.verify(s, sslSession);
             }
         });
@@ -279,6 +280,8 @@ public class RestClient {
         RequestBody body = null;
         if (restRequest.getContent() != null) {
             body = RequestBody.create(JSON, restRequest.getContent());
+        } else {
+            body = RequestBody.create(JSON, "");
         }
 
         switch (restRequest.getVerb()) {
@@ -286,12 +289,10 @@ public class RestClient {
             case DELETE:
                 break;
             case PUT:
-                if (body != null)
-                    requestBuilder.put(body);
+                requestBuilder.put(body);
                 break;
             case POST:
-                if (body != null)
-                    requestBuilder.post(body);
+                requestBuilder.post(body);
                 break;
             default:
                 break;
@@ -328,14 +329,14 @@ public class RestClient {
 
         Retryer<RestResponse> retryer =
                 RetryerBuilder.<RestResponse>newBuilder()
-                              .retryIfResult(Predicates.<RestResponse>isNull())
-                              .retryIfExceptionOfType(SocketTimeoutException.class)
-                              .retryIfExceptionOfType(IOException.class)
-                              .retryIfRuntimeException()
-                              .withWaitStrategy(
-                                      WaitStrategies.exponentialWait(100, maxRetryTime, TimeUnit.MILLISECONDS))
-                              .withStopStrategy(StopStrategies.stopAfterAttempt(retries))
-                              .build();
+                        .retryIfResult(Predicates.<RestResponse>isNull())
+                        .retryIfExceptionOfType(SocketTimeoutException.class)
+                        .retryIfExceptionOfType(IOException.class)
+                        .retryIfRuntimeException()
+                        .withWaitStrategy(
+                                WaitStrategies.exponentialWait(100, maxRetryTime, TimeUnit.MILLISECONDS))
+                        .withStopStrategy(StopStrategies.stopAfterAttempt(retries))
+                        .build();
 
         RestResponse response;
         try {
@@ -381,7 +382,7 @@ public class RestClient {
                     //                              "ms because the last request failed");
                     response = new RestResponse(new CircuitBreakerException(
                             "Requests are not permitted for another " + elapsedTime +
-                            "ms because the last request failed"));
+                                    "ms because the last request failed"));
 
                 } else {
                     try {
