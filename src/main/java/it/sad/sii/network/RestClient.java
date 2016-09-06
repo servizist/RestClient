@@ -8,8 +8,7 @@ import okhttp3.internal.tls.OkHostnameVerifier;
 import javax.net.ssl.*;
 import java.io.IOException;
 import java.net.*;
-import java.security.KeyStore;
-import java.security.SecureRandom;
+import java.security.*;
 import java.util.Hashtable;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
@@ -17,11 +16,6 @@ import java.util.concurrent.TimeUnit;
 
 import static it.sad.sii.network.RestRequest.HTTPVerb.GET;
 import static it.sad.sii.network.RestRequest.HTTPVerb.POST;
-
-//import sun.security.x509.X500Name;
-//import sun.security.x509.X509CertImpl;
-
-//import org.apache.log4j.Logger;
 
 /**
  * Class that handles HTTP(S) GET and POST requests.
@@ -42,8 +36,6 @@ import static it.sad.sii.network.RestRequest.HTTPVerb.POST;
  * Furthermore, we can set the read, write and connect timeouts with {@link #setTimeouts(int, int, int)}
  */
 public class RestClient {
-
-    //    private static final Logger LOG = Logger.getLogger(RestClient.class);
 
     protected final URI serverUri;
     protected final int timeout;
@@ -68,7 +60,8 @@ public class RestClient {
         OPEN
     }
 
-    public RestClient(String serverUrl) throws URISyntaxException {
+    public RestClient(String serverUrl)
+            throws URISyntaxException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException {
         this.serverUri = new URI(serverUrl);
         this.timeout = 2000;
         this.truststore = null;
@@ -79,7 +72,7 @@ public class RestClient {
     }
 
     public RestClient(String serverUrl, String username, String password, int timeout, KeyStore truststore)
-            throws URISyntaxException {
+            throws URISyntaxException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException {
         this.username = username;
         this.password = password;
         this.truststore = truststore;
@@ -90,7 +83,7 @@ public class RestClient {
     }
 
     public RestClient(String serverUrl, String username, String password, int timeout, String httpProxy, int proxyPort)
-            throws URISyntaxException {
+            throws URISyntaxException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException {
         this.username = username;
         this.password = password;
         this.serverUri = new URI(serverUrl);
@@ -180,7 +173,7 @@ public class RestClient {
         retryCircuitBreakerState = RetryCircuitBreakerState.OPEN;
     }
 
-    private void createClient() {
+    private void createClient() throws NoSuchAlgorithmException, KeyStoreException, KeyManagementException {
         final OkHttpClient.Builder okHttpClientBuilder =
                 new OkHttpClient.Builder().connectTimeout(timeout, TimeUnit.MILLISECONDS)
                                           .readTimeout(timeout, TimeUnit.MILLISECONDS)
@@ -188,23 +181,18 @@ public class RestClient {
                                           .proxy(proxy);
 
         // init truststore we need for servers without a valid certificate
-        try {
-            if (truststore != null) {
-                SSLContext sslContext = SSLContext.getInstance("TLSv1.2");
+        if (truststore != null) {
+            SSLContext sslContext = SSLContext.getInstance("TLSv1.2");
 
-                TrustManagerFactory trustManagerFactory =
-                        TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
-                trustManagerFactory.init(truststore);
+            TrustManagerFactory trustManagerFactory =
+                    TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
+            trustManagerFactory.init(truststore);
 
-                sslContext.init(null, trustManagerFactory.getTrustManagers(), new SecureRandom());
-                okHttpClientBuilder.sslSocketFactory(sslContext.getSocketFactory(),
-                                                     (X509TrustManager)trustManagerFactory.getTrustManagers()[0]);
-            } else if (serverUri.getScheme().equalsIgnoreCase("https")) {
-                // No truststore, but we want https anyway? Better be only for test!
-                //                LOG.warn("HTTPS required, but no truststore provided. Add one before production!!!");
-            }
-        } catch (Exception e) {
-            //            LOG.error("Init TrustStore error", e);
+            sslContext.init(null, trustManagerFactory.getTrustManagers(), new SecureRandom());
+            okHttpClientBuilder.sslSocketFactory(sslContext.getSocketFactory(),
+                                                 (X509TrustManager)trustManagerFactory.getTrustManagers()[0]);
+        } else if (serverUri.getScheme().equalsIgnoreCase("https")) {
+            // No truststore, but we want https anyway? Better be only for test!
         }
 
         // Basic authentication
@@ -236,11 +224,7 @@ public class RestClient {
             public boolean verify(String s, SSLSession sslSession) {
                 try {
                     String peer = sslSession.getPeerHost();
-                    // String certPeer = ((X500Name)((X509CertImpl)sslSession.getPeerCertificates()[0])
-                    //         .getSubjectDN()).getCommonName();
-                    if ("services.sad.it".equals(peer)
-                        // && "v-theoden.sad.it".equals(certPeer)
-                            )
+                    if ("services.sad.it".equals(peer))
                         return true;
                 } catch (Exception e) {}
                 return OkHostnameVerifier.INSTANCE.verify(s, sslSession);
@@ -343,10 +327,8 @@ public class RestClient {
         } catch (RetryException e) {
             response = new RestResponse(e);
             openCircuitBreaker();
-            //            LOG.error("retryer sendCall RetryException: " + e);
         } catch (ExecutionException e) {
             response = new RestResponse(e);
-            //            LOG.error("retryer sendCall ExecutionException: " + e);
         }
 
         return response;
@@ -377,8 +359,6 @@ public class RestClient {
 
                 if (elapsedTime < maxCircuitBreakerOpenTime) {
                     // we still do not allow any requests -> throw exception
-                    //                    LOG.error("Requests are not permitted for another " + elapsedTime +
-                    //                              "ms because the last request failed");
                     response = new RestResponse(new CircuitBreakerException(
                             "Requests are not permitted for another " + elapsedTime +
                             "ms because the last request failed"));

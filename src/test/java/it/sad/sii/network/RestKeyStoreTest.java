@@ -5,7 +5,6 @@ import org.junit.Test;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.net.URISyntaxException;
 import java.net.URL;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
@@ -65,10 +64,8 @@ public class RestKeyStoreTest extends RestTest {
             RestClient restKS =
                     new RestClient(INTERNAL_NETWORK_SERVER_ADDRESS, SERVER_USERNAME, SERVER_PASSWORD, 5000, ks);
             jsonResponse = restKS.get(INTERNAL_NETWORK_SERVER_ADDRESS + "lines/1916");
-        } catch (URISyntaxException e) {
-            LOG.error("URISyntaxException in KeyStore test: " + e);
-        } catch (IOException e) {
-            LOG.error("IOException in KeyStore test: " + e);
+        } catch (Exception e) {
+            LOG.error("Exception in KeyStore test", e);
         }
         assertNotNull(jsonResponse);
     }

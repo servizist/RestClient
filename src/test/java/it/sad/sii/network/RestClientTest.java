@@ -25,7 +25,7 @@ public class RestClientTest extends RestTest {
     static public void setUpOnce() {
         try {
             rest_pu = new RestClient(PU_URL_BASE, PU_USERNAME, PU_PASSWORD, 5000, httpProxy, proxyPort);
-        } catch (URISyntaxException e) {
+        } catch (Exception e) {
             LOG.error(e.getMessage());
         }
     }
