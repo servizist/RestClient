@@ -8,7 +8,8 @@ import okhttp3.internal.tls.OkHostnameVerifier;
 import javax.net.ssl.*;
 import java.io.IOException;
 import java.net.*;
-import java.security.*;
+import java.security.KeyStore;
+import java.security.SecureRandom;
 import java.util.Hashtable;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
@@ -195,25 +196,6 @@ public class RestClient {
             // No truststore, but we want https anyway? Better be only for test!
         }
 
-        // Basic authentication
-        if (username != null && password != null) {
-            okHttpClientBuilder.authenticator(new okhttp3.Authenticator() {
-                @Override
-                public Request authenticate(Route route, Response response) throws IOException {
-                    String credential = Credentials.basic(username, password);
-
-                    if (credential.equals(response.request().header("Authorization"))) {
-                        // If we already failed with these credentials, don't retry.
-                        return null;
-                    }
-
-                    return response.request().newBuilder()
-                                   .header("Authorization", credential)
-                                   .build();
-                }
-            });
-        }
-
         // Disable redirect
         okHttpClientBuilder.followRedirects(false);
 
@@ -256,13 +238,22 @@ public class RestClient {
         String requestUrl = generateUrl(restRequest);
         Request.Builder requestBuilder = new Request.Builder();
         requestBuilder.header("User-Agent", "OkHttp RestClient").addHeader("Accept", "application/json");
+
+        // Add basic auth directly to the relevant headers
+        if (username != null && password != null) {
+            String credentials = Credentials.basic(username, password);
+            requestBuilder.header("Authorization", credentials);
+        }
+
         requestBuilder.url(requestUrl);
 
         // Build request to send to our REST service
         // Creation of PUT or POST body
-        RequestBody body = null;
+        RequestBody body;
         if (restRequest.getContent() != null) {
             body = RequestBody.create(JSON, restRequest.getContent());
+        } else {
+            body = RequestBody.create(JSON, "");
         }
 
         switch (restRequest.getVerb()) {
@@ -270,12 +261,10 @@ public class RestClient {
             case DELETE:
                 break;
             case PUT:
-                if (body != null)
-                    requestBuilder.put(body);
+                requestBuilder.put(body);
                 break;
             case POST:
-                if (body != null)
-                    requestBuilder.post(body);
+                requestBuilder.post(body);
                 break;
             default:
                 break;
