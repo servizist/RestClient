@@ -1,8 +1,10 @@
 package it.sad.sii.network;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.net.URISyntaxException;
-import java.util.Hashtable;
+import java.util.Collections;
+import java.util.Map;
 
 
 /**
@@ -24,55 +26,38 @@ public class RestRequest {
     private final RestClient restClient;
     private final HTTPVerb verb;
     private final String action;
-    private final Hashtable<String, String> params;
-    private final String encodedParams;
+    private final Map<String, String> params;
     private final String content;
+    private final Map<String, String> headers;
 
-    public RestRequest(RestClient restClient, HTTPVerb verb, String action, Hashtable<String, String> params) {
+    public RestRequest(RestClient restClient, HTTPVerb verb, String action, Map<String, String> params,
+                       String content, Map<String, String> headers) {
         this.restClient = restClient;
         this.verb = verb;
         this.action = action;
         this.params = params;
-        this.encodedParams = null;
-        this.content = null;
+        this.content = content;
+        this.headers = headers;
     }
 
+    public RestRequest(RestClient restClient, HTTPVerb verb, String action, Map<String, String> params) {
+        this(restClient, verb, action, params, null, Collections.<String, String>emptyMap());
+    }
 
-    public RestRequest(RestClient restClient, HTTPVerb verb, String action, String params, String content) {
-        this.restClient = restClient;
-        this.verb = verb;
-        this.action = action;
-        this.encodedParams = params;
-        this.params = null;
-        this.content = content;
+    public RestRequest(RestClient restClient, HTTPVerb verb, String action, String params, String content)
+            throws UnsupportedEncodingException {
+        this(restClient, verb, action, UrlUtils.splitQuerySingle(params), content,
+             Collections.<String, String>emptyMap());
     }
 
     public RestRequest(RestClient restClient, HTTPVerb verb, String action) {
-        this.restClient = restClient;
-        this.verb = verb;
-        this.action = action;
-        this.params = null;
-        this.encodedParams = null;
-        this.content = null;
+        this(restClient, verb, action, Collections.<String, String>emptyMap(), null,
+             Collections.<String, String>emptyMap());
     }
 
     public RestRequest(RestClient restClient, HTTPVerb verb, String action, String content) {
-        this.restClient = restClient;
-        this.verb = verb;
-        this.action = action;
-        this.params = null;
-        this.encodedParams = null;
-        this.content = content;
-    }
-
-    public RestRequest(RestClient restClient, HTTPVerb verb, String action, Hashtable<String, String> params,
-                       String content) {
-        this.restClient = restClient;
-        this.verb = verb;
-        this.action = action;
-        this.params = params;
-        this.encodedParams = null;
-        this.content = content;
+        this(restClient, verb, action, Collections.<String, String>emptyMap(), content,
+             Collections.<String, String>emptyMap());
     }
 
     public HTTPVerb getVerb() {
@@ -83,15 +68,15 @@ public class RestRequest {
         return action;
     }
 
-    public Hashtable<String, String> getParams() {
+    public Map<String, String> getParams() {
         return params;
-    }
-
-    public String getEncodedParams() {
-        return encodedParams;
     }
 
     public String getContent() {
         return content;
+    }
+
+    public Map<String, String> getHeaders() {
+        return headers;
     }
 }
