@@ -1,15 +1,20 @@
 package it.sad.sii.network;
 
 import com.github.rholder.retry.*;
-import com.google.common.base.Predicates;
+import com.google.common.base.Predicate;
 import okhttp3.*;
 import okhttp3.internal.tls.OkHostnameVerifier;
 
 import javax.net.ssl.*;
 import java.io.IOException;
-import java.net.*;
+import java.net.InetSocketAddress;
+import java.net.Proxy;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.security.*;
+import java.util.Collections;
 import java.util.Hashtable;
+import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -207,7 +212,7 @@ public class RestClient {
                     String peer = sslSession.getPeerHost();
                     if ("services.sad.it".equals(peer))
                         return true;
-                } catch (Exception e) {}
+                } catch (Exception ignored) {}
                 return OkHostnameVerifier.INSTANCE.verify(s, sslSession);
             }
         });
@@ -217,13 +222,10 @@ public class RestClient {
 
     private String generateUrl(RestRequest restRequest) throws URISyntaxException {
         String baseUrl = serverUri.resolve(new URI(restRequest.getAction())).toString();
-        String encodedParams = restRequest.getEncodedParams();
-        if (encodedParams != null) {
-            baseUrl += "?" + encodedParams;
-        }
+
         HttpUrl url = HttpUrl.parse(baseUrl);
         HttpUrl.Builder urlBuilder = url.newBuilder();
-        Hashtable<String, String> params = restRequest.getParams();
+        Map<String, String> params = restRequest.getParams();
         if (params != null) {
             for (String parKey : params.keySet()) {
                 urlBuilder.addQueryParameter(parKey, params.get(parKey));
@@ -237,6 +239,10 @@ public class RestClient {
         String requestUrl = generateUrl(restRequest);
         Request.Builder requestBuilder = new Request.Builder();
         requestBuilder.header("User-Agent", "OkHttp RestClient").addHeader("Accept", "application/json");
+
+        for (Map.Entry<String, String> header: restRequest.getHeaders().entrySet()) {
+            requestBuilder.addHeader(header.getKey(), header.getValue());
+        }
 
         // Add basic auth directly to the relevant headers
         if (username != null && password != null) {
@@ -292,26 +298,33 @@ public class RestClient {
         if (retryCircuitBreakerState != RetryCircuitBreakerState.CLOSED)
             throw new IllegalArgumentException("Cannot make smart request when state = " + retryCircuitBreakerState);
 
-        final Callable<RestResponse> sendCall = new Callable<RestResponse>() {
-            public RestResponse call() throws Exception {
-                return sendRequest(restRequest);
-            }
-        };
-
-        Retryer<RestResponse> retryer =
+        RetryerBuilder<RestResponse> builder =
                 RetryerBuilder.<RestResponse>newBuilder()
-                              .retryIfResult(Predicates.<RestResponse>isNull())
-                              .retryIfExceptionOfType(SocketTimeoutException.class)
-                              .retryIfExceptionOfType(IOException.class)
+                              .retryIfResult(new Predicate<RestResponse>() {
+                                  @Override
+                                  public boolean apply(RestResponse restResponse) {
+                                      return restResponse.isTransientErrorCode();
+                                  }
+                              })
                               .retryIfRuntimeException()
                               .withWaitStrategy(
                                       WaitStrategies.exponentialWait(100, maxRetryTime, TimeUnit.MILLISECONDS))
-                              .withStopStrategy(StopStrategies.stopAfterAttempt(retries))
-                              .build();
+                              .withStopStrategy(StopStrategies.stopAfterAttempt(retries));
+
+        for (Class<? extends Throwable> exc: RestResponse.getTransientExceptions()) {
+            builder.retryIfExceptionOfType(exc);
+        }
+
+        Retryer<RestResponse> retryer = builder.build();
 
         RestResponse response;
         try {
-            response = retryer.call(sendCall);
+            response = retryer.call(new Callable<RestResponse>() {
+                @Override
+                public RestResponse call() throws Exception {
+                    return sendRequest(restRequest);
+                }
+            });
         } catch (RetryException e) {
             response = new RestResponse(e);
             openCircuitBreaker();
@@ -389,20 +402,23 @@ public class RestClient {
         return post(command, null, content);
     }
 
-    public int post(String command, Hashtable<String, String> params, String content)
+    public int post(String command, Map<String, String> params, String content)
             throws URISyntaxException, IOException {
+        return postResponse(command, params, content, Collections.<String, String>emptyMap()).getCode();
+    }
 
-        RestResponse response = new RestRequest(this, POST, command, params, content).doRequest();
-
-        return response.getCode();
+    public int post(String command, String body, Map<String, String> headers) throws IOException, URISyntaxException {
+        return postResponse(command, Collections.<String, String>emptyMap(), body, headers).getCode();
     }
 
     public RestResponse postResponse(String command, String content) throws URISyntaxException, IOException {
-        return postResponse(command, null, content);
+        return postResponse(command, Collections.<String, String>emptyMap(), content,
+                            Collections.<String, String>emptyMap());
     }
 
-    public RestResponse postResponse(String command, Hashtable<String, String> params, String content)
+    public RestResponse postResponse(String command, Map<String, String> params, String content,
+                                     Map<String, String> headers)
             throws URISyntaxException, IOException {
-        return new RestRequest(this, POST, command, params, content).doRequest();
+        return new RestRequest(this, POST, command, params, content, headers).doRequest();
     }
 }
