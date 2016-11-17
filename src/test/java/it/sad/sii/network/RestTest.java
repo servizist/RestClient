@@ -15,7 +15,7 @@ public class RestTest {
     static it.sad.sii.network.RestClient rest_pu;
 
     protected static final int proxyPort = 3128;
-    protected static final String httpProxy = "proxy.sad.it";
+    protected static final String httpProxy = "proxy.servizist.it";
 
     // Public online test server
     protected static final String PU_URL_BASE = "https://httpbin.org/";
@@ -24,10 +24,14 @@ public class RestTest {
 
 
     protected void assertJsonEquals(String message, String jsonResponse, String expectedJsonResponse) {
+        // remove ip of sending host because it may change
+        jsonResponse = jsonResponse.replaceAll(",\\s\"origin\"\\s*:\\s*\"\\d+\\.\\d+\\.\\d+\\.\\d+\"\\s*", "")
+                                   .replaceAll(",\\s\"origin\"\\s*:\\s*\"\\d+\\.\\d+\\.\\d+\\.\\d+\"\\s*", "");
+
         JsonParser jparser = new JsonParser();
         JsonElement response = jparser.parse(jsonResponse);
         JsonElement expected = jparser.parse(expectedJsonResponse);
-        assertEquals("JSON response differs from expected response.", response, expected);
+        assertEquals(message, expected, response);
     }
 
 }

@@ -44,7 +44,7 @@ public class RestClientTest extends RestTest {
                          "\"Authorization\":\"Basic cGluY286MTIzNDU2Nzg5MA==\"," +
                          "\"Host\":\"httpbin.org\",\"User-Agent\":\"OkHttp " +
                          "RestClient\"}," +
-                         "\"origin\":\"2.113.90.244\",\"url\":\"https://httpbin.org/get?limit=%3F2&placeId=%26685\"}");
+                         "\"url\":\"https://httpbin.org/get?limit=%3F2&placeId=%26685\"}");
         assertEquals(rest_pu.getRetryCircuitBreakerState(), RestClient.RetryCircuitBreakerState.OFF);
     }
 
@@ -78,7 +78,7 @@ public class RestClientTest extends RestTest {
                          "\"Accept\": \"application/json\", \"Accept-Encoding\": \"gzip\", " +
                          "\"Authorization\":\"Basic cGluY286MTIzNDU2Nzg5MA==\", " +
                          "\"Host\": \"httpbin.org\"," +
-                         "\"User-Agent\": \"OkHttp RestClient\" }, \"origin\": \"2.113.90.244\"," +
+                         "\"User-Agent\": \"OkHttp RestClient\" }," +
                          "\"url\": \"https://httpbin.org/get?id=123&name=pippo\" }");
         assertEquals(rest_pu.getRetryCircuitBreakerState(), RestClient.RetryCircuitBreakerState.OFF);
     }
@@ -98,8 +98,7 @@ public class RestClientTest extends RestTest {
                          "\"Accept-Encoding\": \"gzip\", " +
                          "\"Authorization\":\"Basic cGluY286MTIzNDU2Nzg5MA==\", " +
                          "\"Host\": \"httpbin.org\", " +
-                         "\"User-Agent\": \"OkHttp RestClient\"}, \"method\": \"GET\"," +
-                         " \"origin\": \"2.113.90.244\"}");
+                         "\"User-Agent\": \"OkHttp RestClient\"}, \"method\": \"GET\"}");
         assertEquals(rest_pu.getRetryCircuitBreakerState(), RestClient.RetryCircuitBreakerState.OFF);
     }
 
@@ -135,7 +134,7 @@ public class RestClientTest extends RestTest {
                          "\"Content-Length\": \"11\", \"Content-Type\": \"application/json; charset=utf-8\"," +
                          "\"Authorization\":\"Basic cGluY286MTIzNDU2Nzg5MA==\"," +
                          "\"Host\": \"httpbin.org\", \"User-Agent\": \"OkHttp RestClient\"  },  \"json\": null," +
-                         "\"origin\": \"2.113.90.244\", \"url\": \"https://httpbin.org/post\"}");
+                         "\"url\": \"https://httpbin.org/post\"}");
         assertEquals(rest_pu.getRetryCircuitBreakerState(), RestClient.RetryCircuitBreakerState.OFF);
     }
 
@@ -227,7 +226,7 @@ public class RestClientTest extends RestTest {
                              "\"gzip\"," +
                              "\"Authorization\":\"Basic cGluY286MTIzNDU2Nzg5MA==\"," +
                              "\"Host\":\"httpbin.org\",\"User-Agent\":\"OkHttp RestClient\"}," +
-                             "\"origin\":\"2.113.90.244\",\"url\":\"https://httpbin.org/get\"}");
+                             "\"url\":\"https://httpbin.org/get\"}");
             LOG.debug(response);
             return;
         }

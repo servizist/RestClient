@@ -4,6 +4,14 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
+    <distributionManagement>
+        <repository>
+            <id>v-soft1-repo</id>
+            <name>Servizi S.T. Repository</name>
+            <url>http://v-soft1.sad.it:8081/nexus/content/repositories/releases</url>
+        </repository>
+    </distributionManagement>
+
     <modelVersion>4.0.0</modelVersion>
     <groupId>it.sad.sii</groupId>
     <artifactId>RestClient</artifactId>
