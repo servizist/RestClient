@@ -35,11 +35,12 @@ public class RestResponse {
     // 401 Not authorized: we are not interactive, so trying again (with the same credentials)
     //                     will do no good.
     // 403 Forbidden: authorization will not help and the request SHOULD NOT be repeated.
+    // 404 Not found
     // 410 Gone: this condition is expected to be considered permanent
     // 415 Unsupported Media Type
     // 501 Not Implemented
     // IMPORTANT: keep them ordered!
-    private final static int[] permanentErrorCodes = new int[] { 400, 401, 403, 410, 415, 501 };
+    private final static int[] permanentErrorCodes = new int[] { 400, 401, 403, 404, 410, 415, 501 };
 
     // Unfortunately, OkHttp just declares to throw "IOException", so
     private final static List<Class<? extends Throwable>> transientExceptions =

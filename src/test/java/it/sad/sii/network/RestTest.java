@@ -25,8 +25,8 @@ public class RestTest {
 
     protected void assertJsonEquals(String message, String jsonResponse, String expectedJsonResponse) {
         // remove ip of sending host because it may change
-        jsonResponse = jsonResponse.replaceAll(",\\s\"origin\"\\s*:\\s*\"\\d+\\.\\d+\\.\\d+\\.\\d+\"\\s*", "")
-                                   .replaceAll(",\\s\"origin\"\\s*:\\s*\"\\d+\\.\\d+\\.\\d+\\.\\d+\"\\s*", "");
+        jsonResponse = jsonResponse.replaceAll(",\\s*\"origin\"\\s*:\\s*\"\\d+\\.\\d+\\.\\d+\\.\\d+\"\\s*", "")
+                                   .replaceAll(",\\s*\"origin\"\\s*:\\s*\"\\d+\\.\\d+\\.\\d+\\.\\d+\"\\s*", "");
 
         JsonParser jparser = new JsonParser();
         JsonElement response = jparser.parse(jsonResponse);
