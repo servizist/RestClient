@@ -3,7 +3,6 @@ package it.sad.sii.network;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import java.net.URISyntaxException;
 import java.util.Hashtable;
 
 import static org.junit.Assert.*;
@@ -16,12 +15,14 @@ import static org.junit.Assert.*;
 public class RestClientTest extends RestTest {
 
     @BeforeClass
-    static public void setUpOnce() {
-        try {
-            rest_pu = new RestClient(PU_URL_BASE, PU_USERNAME, PU_PASSWORD, 5000, httpProxy, proxyPort);
-        } catch (Exception e) {
-            LOG.error(e.getMessage());
-        }
+    static public void setUpOnce() throws Exception {
+        if (hostIsReachable(PU_URL_BASE))
+            rest_pu = new RestClient(PU_URL_BASE, PU_USERNAME, PU_PASSWORD, 5000);
+        else if (hostIsReachable(httpProxyServizist))
+            rest_pu =
+                    new RestClient(PU_URL_BASE, PU_USERNAME, PU_PASSWORD, 5000, httpProxyServizist, proxyPortServizist);
+        else if (hostIsReachable(httpProxySad))
+            rest_pu = new RestClient(PU_URL_BASE, PU_USERNAME, PU_PASSWORD, 5000, httpProxySad, proxyPortSad);
     }
 
     @Test

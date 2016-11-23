@@ -76,6 +76,17 @@ public class RestClient {
         createClient();
     }
 
+    public RestClient(String serverUrl, String username, String password, int timeout)
+            throws URISyntaxException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException {
+        this.username = username;
+        this.password = password;
+        this.truststore = null;
+        this.serverUri = new URI(serverUrl);
+        this.timeout = timeout;
+        disableRetryCircuitBreaker();
+        createClient();
+    }
+
     public RestClient(String serverUrl, String username, String password, int timeout, KeyStore truststore)
             throws URISyntaxException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException {
         this.username = username;
