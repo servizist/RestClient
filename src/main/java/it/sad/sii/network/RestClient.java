@@ -303,7 +303,7 @@ public class RestClient {
                               .retryIfResult(new Predicate<RestResponse>() {
                                   @Override
                                   public boolean apply(RestResponse restResponse) {
-                                      return restResponse.isTransientErrorCode();
+                                      return !restResponse.isOk() && restResponse.isTransientErrorCode();
                                   }
                               })
                               .retryIfRuntimeException()
