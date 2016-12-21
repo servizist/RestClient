@@ -24,12 +24,12 @@ import static it.sad.sii.network.RestRequest.HTTPVerb.POST;
 
 /**
  * Class that handles HTTP(S) GET and POST requests.
- * <p/>
+ * <p>
  * It has two modes: simple and smart.
- * <p/>
+ * <p>
  * 1) Simple Mode: Make each request exactly once (retryCircuitBreakerState = OFF).
  * Is the default mode and can be set with {@link #disableRetryCircuitBreaker()}
- * <p/>
+ * <p>
  * 2) Smart Mode: Retry each request 'retries' times with an exponential backoff up until 'maxRetryTime' ms is reached
  * (retryCircuitBreakerState = CLOSED).
  * If the request does not succeed it blocks all following requests for 'maxCircuitBreakerOpenTime' ms
@@ -37,7 +37,7 @@ import static it.sad.sii.network.RestRequest.HTTPVerb.POST;
  * After that the next request will be issued in the Simple Mode.
  * Only if that succeeds we re-enter the Smart Mode (retryCircuitBreakerState = CLOSED).
  * This mode can be set with {@link #enableRetryCircuitBreaker(int, int, int)}
- * <p/>
+ * <p>
  * Furthermore, we can set the read, write and connect timeouts with {@link #setTimeouts(int, int, int)}
  */
 public class RestClient {
@@ -251,7 +251,7 @@ public class RestClient {
         Request.Builder requestBuilder = new Request.Builder();
         requestBuilder.header("User-Agent", "OkHttp RestClient").addHeader("Accept", "application/json");
 
-        for (Map.Entry<String, String> header: restRequest.getHeaders().entrySet()) {
+        for (Map.Entry<String, String> header : restRequest.getHeaders().entrySet()) {
             requestBuilder.addHeader(header.getKey(), header.getValue());
         }
 
@@ -316,13 +316,18 @@ public class RestClient {
                                   public boolean apply(RestResponse restResponse) {
                                       return !restResponse.isOk() && restResponse.isTransientErrorCode();
                                   }
+
+                                  @Override
+                                  public boolean test(RestResponse restResponse) {
+                                      return apply(restResponse);
+                                  }
                               })
                               .retryIfRuntimeException()
                               .withWaitStrategy(
                                       WaitStrategies.exponentialWait(100, maxRetryTime, TimeUnit.MILLISECONDS))
                               .withStopStrategy(StopStrategies.stopAfterAttempt(retries));
 
-        for (Class<? extends Throwable> exc: RestResponse.getTransientExceptions()) {
+        for (Class<? extends Throwable> exc : RestResponse.getTransientExceptions()) {
             builder.retryIfExceptionOfType(exc);
         }
 
