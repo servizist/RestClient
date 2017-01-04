@@ -316,11 +316,6 @@ public class RestClient {
                                   public boolean apply(RestResponse restResponse) {
                                       return !restResponse.isOk() && restResponse.isTransientErrorCode();
                                   }
-
-                                  @Override
-                                  public boolean test(RestResponse restResponse) {
-                                      return apply(restResponse);
-                                  }
                               })
                               .retryIfRuntimeException()
                               .withWaitStrategy(
