@@ -8,7 +8,7 @@
         <repository>
             <id>v-soft1-repo</id>
             <name>Servizi S.T. Repository</name>
-            <url>http://v-soft1.sad.it:8081/nexus/content/repositories/releases</url>
+            <url>http://v-soft1.servizist.it:8081/repository/maven-releases</url>
         </repository>
     </distributionManagement>
 
