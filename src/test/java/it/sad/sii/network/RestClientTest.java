@@ -43,8 +43,9 @@ public class RestClientTest extends RestTest {
                          "{\"Accept\":\"application/json\"," +
                          "\"Accept-Encoding\":\"gzip\"," +
                          "\"Authorization\":\"Basic cGluY286MTIzNDU2Nzg5MA==\"," +
-                         "\"Connection\":\"close\",\"Host\":\"httpbin.org\"," +
+                         "\"Host\":\"httpbin.org\"," +
                          "\"User-Agent\":\"OkHttp RestClient\"}," +
+                         "\"origin\":\"84.18.153.125, 84.18.153.125\"," +
                          "\"url\":\"https://httpbin.org/get?limit=%3F2&placeId=%26685\"}");
         assertEquals(rest_pu.getRetryCircuitBreakerState(), RestClient.RetryCircuitBreakerState.OFF);
     }
@@ -78,8 +79,9 @@ public class RestClientTest extends RestTest {
                          "{\"args\": {\"id\": \"123\", \"name\": \"pippo\"}, \"headers\": {" +
                          "\"Accept\": \"application/json\", \"Accept-Encoding\": \"gzip\", " +
                          "\"Authorization\":\"Basic cGluY286MTIzNDU2Nzg5MA==\", " +
-                         "\"Connection\":\"close\",\"Host\":\"httpbin.org\"," +
+                         "\"Host\":\"httpbin.org\"," +
                          "\"User-Agent\": \"OkHttp RestClient\" }," +
+                         "\"origin\":\"84.18.153.125, 84.18.153.125\"," +
                          "\"url\": \"https://httpbin.org/get?id=123&name=pippo\" }");
         assertEquals(rest_pu.getRetryCircuitBreakerState(), RestClient.RetryCircuitBreakerState.OFF);
     }
@@ -98,8 +100,9 @@ public class RestClientTest extends RestTest {
                          "{\"gzipped\": true, \"headers\": {\"Accept\": \"application/json\"," +
                          "\"Accept-Encoding\": \"gzip\", " +
                          "\"Authorization\":\"Basic cGluY286MTIzNDU2Nzg5MA==\", " +
-                         "\"Connection\":\"close\",\"Host\":\"httpbin.org\"," +
-                         "\"User-Agent\": \"OkHttp RestClient\"}, \"method\": \"GET\"}");
+                         "\"Host\":\"httpbin.org\"," +
+                         "\"User-Agent\": \"OkHttp RestClient\"}, \"method\": \"GET\"," +
+                         "\"origin\":\"84.18.153.125, 84.18.153.125\"}");
         assertEquals(rest_pu.getRetryCircuitBreakerState(), RestClient.RetryCircuitBreakerState.OFF);
     }
 
@@ -132,10 +135,11 @@ public class RestClientTest extends RestTest {
         assertJsonEquals("POST response differs from expected response.", response.getData(),
                          "{\"args\": {}, \"data\": \"ABCDEDFGHIJ\", \"files\": {}, \"form\": {}, \"headers\": {" +
                          "\"Accept\": \"application/json\", \"Accept-Encoding\": \"gzip\", " +
-                         "\"Content-Length\": \"11\", \"Content-Type\": \"application/json; charset=utf-8\"," +
                          "\"Authorization\":\"Basic cGluY286MTIzNDU2Nzg5MA==\"," +
-                         "\"Connection\":\"close\",\"Host\":\"httpbin.org\"," +
+                         "\"Content-Length\": \"11\", \"Content-Type\": \"application/json; charset=utf-8\"," +
+                         "\"Host\":\"httpbin.org\"," +
                          "\"User-Agent\": \"OkHttp RestClient\"  },  \"json\": null," +
+                         "\"origin\":\"84.18.153.125, 84.18.153.125\"," +
                          "\"url\": \"https://httpbin.org/post\"}");
         assertEquals(rest_pu.getRetryCircuitBreakerState(), RestClient.RetryCircuitBreakerState.OFF);
     }
@@ -227,8 +231,9 @@ public class RestClientTest extends RestTest {
                              "{\"args\":{},\"headers\":{\"Accept\":\"application/json\",\"Accept-Encoding\":" +
                              "\"gzip\"," +
                              "\"Authorization\":\"Basic cGluY286MTIzNDU2Nzg5MA==\"," +
-                             "\"Connection\":\"close\",\"Host\":\"httpbin.org\"," +
+                             "\"Host\":\"httpbin.org\"," +
                              "\"User-Agent\":\"OkHttp RestClient\"}," +
+                             "\"origin\":\"84.18.153.125, 84.18.153.125\"," +
                              "\"url\":\"https://httpbin.org/get\"}");
             LOG.debug(response);
             return;
